@@ -61,6 +61,29 @@
   .duzen-galeri .foto.yeni { outline:3px solid var(--ok); outline-offset:-3px; }
   #bildirim { position:fixed; left:50%; bottom:20px; transform:translateX(-50%); background:#1b2630; color:#fff; padding:10px 16px; border-radius:8px; font-size:14px; z-index:50; display:none; max-width:90vw; }
   #bildirim.hata { background:var(--hata); }
+  /* Görünüm: alt alta (1) ya da yan yana kareler (2 / 3) */
+  .yerlesim { display:flex; border:1px solid var(--cizgi); border-radius:8px; overflow:hidden; flex:none; }
+  .yerlesim button { background:none; border:0; color:var(--muted); width:36px; height:38px; font-size:15px; font-weight:700; cursor:pointer; }
+  .yerlesim button + button { border-left:1px solid var(--cizgi); }
+  .yerlesim button.secili { background:var(--accent); color:#fff; }
+  main.izgara { display:grid; grid-template-columns:repeat(var(--sutun, 2), minmax(0, 1fr)); gap:10px; align-items:start; }
+  main.izgara > .durum { grid-column:1 / -1; }
+  .izgara .kart { margin:0; }
+  .izgara .kart.buyuk { grid-column:1 / -1; }
+  .izgara .kart.buyuk pre { max-height:none; }
+  .izgara .kart:not(.buyuk) { aspect-ratio:1; overflow:hidden; display:flex; flex-direction:column; cursor:pointer; padding:10px; }
+  .izgara .kart:not(.buyuk) .ust { flex-wrap:wrap; gap:6px; }
+  .izgara .kart:not(.buyuk) .baslik { font-size:15px; }
+  .izgara .kart:not(.buyuk) button.simge { width:32px; height:32px; font-size:14px; }
+  .izgara .kart:not(.buyuk) .ust > button.kopyala { order:3; flex:1 0 100%; min-width:0; padding:8px 10px; font-size:14px; }
+  .izgara .kart:not(.buyuk) pre { flex:1; min-height:0; max-height:none; margin-top:8px; font-size:13px; -webkit-mask-image:linear-gradient(to bottom, #000 60%, transparent); mask-image:linear-gradient(to bottom, #000 60%, transparent); }
+  .izgara .kart:not(.buyuk) .butonlar { margin-top:8px; }
+  .izgara .kart:not(.buyuk) .butonlar button { flex:1 0 100%; min-width:0; padding:8px 10px; font-size:14px; }
+  .izgara .kart:not(.buyuk) .butonlar button:not(:first-child) { display:none; }
+  .izgara .kart:not(.buyuk) .galeri { grid-template-columns:repeat(3, minmax(0, 1fr)); gap:4px; flex:1; min-height:0; overflow:hidden; align-content:start; }
+  .izgara .kart:not(.buyuk) .foto > button, .izgara .kart:not(.buyuk) .belge span { display:none; }
+  .izgara .kart:not(.buyuk) .belge { padding:4px; }
+  .izgara .kart:not(.buyuk) .belge b { font-size:13px; }
 </style>
 </head>
 <body>
@@ -68,6 +91,9 @@
   <div class="ust-satir">
     <h1>Hazır Yazılar</h1>
     <button class="kucuk-link" id="sifirla" title="Sıralamayı ilk haline döndür">Sırayı sıfırla</button>
+    <div class="yerlesim" role="group" aria-label="Görünüm">
+      <button data-y="1" title="Alt alta">☰</button><button data-y="2" title="Yan yana 2">2</button><button data-y="3" title="Yan yana 3">3</button>
+    </div>
     <button class="ikincil" id="yeniDugme" title="Yeni kart ekle">+ Yeni</button>
     <button class="simge" id="ayarDugme" title="Düzenleme anahtarı" aria-label="Düzenleme anahtarı">⚙</button>
   </div>
@@ -88,6 +114,7 @@
       <div class="satir">
         <button type="button" class="ikincil" id="dDosyaSec">+ Fotoğraf / PDF ekle</button>
         <select id="dKlasor" title="Yeni dosyaların konacağı klasör"></select>
+        <input type="text" id="dYeniKlasor" placeholder="Yeni klasör adı (ör. Fly-11-Files)" autocomplete="off" hidden>
       </div>
       <input type="file" id="dDosya" multiple accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,video/mp4,video/quicktime" hidden>
     </div>
@@ -305,7 +332,18 @@ function siraliKartlar() {
   return KARTLAR.slice().sort((a, b) => yer(a.id) - yer(b.id));
 }
 
+/* ---------- Görünüm: alt alta (1) ya da yan yana kareler (2 / 3); her cihaz kendi seçimini hatırlar ---------- */
+function yerlesim() { const y = oku("yerlesim"); return ["1", "2", "3"].includes(y) ? y : "2"; }
+function yerlesimUygula() {
+  const y = yerlesim();
+  liste.classList.toggle("izgara", y !== "1");
+  liste.style.setProperty("--sutun", y);
+  document.querySelectorAll(".yerlesim button").forEach(b => b.classList.toggle("secili", b.dataset.y === y));
+}
+document.querySelectorAll(".yerlesim button").forEach(b => b.addEventListener("click", () => { yaz("yerlesim", b.dataset.y); yerlesimUygula(); }));
+
 function ciz() {
+  yerlesimUygula();
   liste.innerHTML = "";
   siraliKartlar().forEach(k => liste.appendChild(kartOlustur(k)));
   if (!KARTLAR.length) liste.innerHTML = '<div class="durum">Henüz kart yok. "+ Yeni" ile ekleyebilirsin.</div>';
@@ -343,10 +381,17 @@ function kartOlustur(y) {
     const pre = document.createElement("pre");
     pre.textContent = y.metin;
     pre.title = "Tamamını görmek için tıkla";
-    pre.addEventListener("click", () => pre.classList.toggle("acik"));
+    pre.addEventListener("click", () => { if (yerlesim() === "1") pre.classList.toggle("acik"); });
     kart.appendChild(pre);
   }
   if (dosyalar.length) dosyaBolumu(kart, dosyalar);
+  /* Yan yana görünümde karta dokununca büyür, tekrar dokununca küçülür. */
+  kart.addEventListener("click", e => {
+    if (yerlesim() === "1" || e.target.closest("button, a, input, .tut")) return;
+    if (kart.classList.contains("buyuk") && String(window.getSelection ? window.getSelection() : "").length) return;
+    kart.classList.toggle("buyuk");
+    if (kart.classList.contains("buyuk") && kart.scrollIntoView) kart.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
   return kart;
 }
 
@@ -439,9 +484,11 @@ function baglaSurukle(tut, kart) {
     kart.classList.add("surukle");
     const hareket = ev => {
       const digerleri = [...liste.children].filter(k => k !== kart && k.style.display !== "none");
+      const izgara = liste.classList.contains("izgara");
       const hedef = digerleri.find(k => {
         const r = k.getBoundingClientRect();
-        return ev.clientY < r.top + r.height / 2;
+        if (!izgara) return ev.clientY < r.top + r.height / 2;
+        return ev.clientY < r.top || (ev.clientY <= r.bottom && ev.clientX < r.left + r.width / 2);
       });
       if (hedef) { if (kart.nextSibling !== hedef) liste.insertBefore(kart, hedef); }
       else liste.appendChild(kart);
@@ -593,16 +640,31 @@ function tahminKlasor(baslik) {
   return /(^|\D)8(\D|$)/.test(baslik || "") ? "8-Files" : "11-Files";
 }
 
+function tumKlasorler() {
+  const hepsi = new Set(KLASORLER);
+  KARTLAR.forEach(x => (x.dosyalar || []).forEach(y => { const kl = klasoru(y); if (kl) hepsi.add(kl); }));
+  return [...hepsi];
+}
+
+function klasorAdi(ad) {
+  return (ad || "").normalize("NFC").trim().replace(/\s+/g, "-").replace(/[^\p{L}\p{N}_-]/gu, "").replace(/-+/g, "-").replace(/^[-_]+|[-_]+$/g, "");
+}
+
 function klasorSecenekleri(k) {
   const sec = $("dKlasor");
   const kartKlasorleri = k ? (k.dosyalar || []).map(klasoru).filter(Boolean) : [];
   sec.innerHTML = "";
-  [...new Set(KLASORLER.concat(kartKlasorleri))].forEach(kl => {
+  tumKlasorler().forEach(kl => {
     const o = document.createElement("option");
     o.value = kl; o.textContent = "Klasör: " + kl;
     sec.appendChild(o);
   });
+  const yeni = document.createElement("option");
+  yeni.value = "__yeni__"; yeni.textContent = "+ Yeni klasör…";
+  sec.appendChild(yeni);
   sec.value = kartKlasorleri[0] || tahminKlasor(k ? k.baslik : "");
+  $("dYeniKlasor").hidden = true;
+  $("dYeniKlasor").value = "";
 }
 
 function duzenKutusu(url, ad, resim, yeni, kaldir) {
@@ -656,7 +718,12 @@ function duzenleAc(id) {
 
 $("yeniDugme").addEventListener("click", () => duzenleAc(null));
 $("dDosyaSec").addEventListener("click", () => $("dDosya").click());
-$("dKlasor").addEventListener("change", () => { if (duzen) duzen.klasorElle = true; });
+$("dKlasor").addEventListener("change", () => {
+  if (duzen) duzen.klasorElle = true;
+  const yeni = $("dKlasor").value === "__yeni__";
+  $("dYeniKlasor").hidden = !yeni;
+  if (yeni) { $("dNot").textContent = "Yeni klasör, içine dosya yüklenince oluşur."; $("dYeniKlasor").focus(); }
+});
 $("dBaslik").addEventListener("input", () => {
   if (duzen && duzen.yeniMi && !duzen.klasorElle && !duzen.mevcut.length) $("dKlasor").value = tahminKlasor($("dBaslik").value);
 });
@@ -709,10 +776,14 @@ $("duzenForm").addEventListener("submit", async e => {
   const metin = $("dMetin").value.replace(/⁠/g, "").replace(/\s+$/, "");
   if (!baslik) { $("dNot").textContent = "Başlık yaz."; $("dBaslik").focus(); return; }
   if (!metin && !duzen.mevcut.length && !duzen.yeni.length) { $("dNot").textContent = "Bir metin yaz ya da en az bir dosya ekle."; return; }
+  let klasor = $("dKlasor").value;
+  if (klasor === "__yeni__") {
+    klasor = klasorAdi($("dYeniKlasor").value);
+    if (!klasor && duzen.yeni.length) { $("dNot").textContent = "Yeni klasörün adını yaz."; $("dYeniKlasor").focus(); return; }
+  }
   kayitSurdu = true;
   $("dKaydet").disabled = true;
   try {
-    const klasor = $("dKlasor").value;
     const kullanilan = new Set();
     KARTLAR.forEach(k => (k.dosyalar || []).forEach(y => kullanilan.add(y)));
     duzen.mevcut.forEach(y => kullanilan.add(y));
