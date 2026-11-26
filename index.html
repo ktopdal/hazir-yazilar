@@ -209,10 +209,13 @@ async function zipIndir(liste, dugme) {
   }
 }
 
-/* "Hepsini kopyala" (Windows): tarayıcı panoya aynı anda tek resim koyabiliyor.
-   Bu yüzden bilgisayardaki HazirFoto yardımcısı (hazirfoto: bağlantısı) fotoğrafları
-   Gezgin'de Ctrl+C yapılmış gibi DOSYA olarak panoya koyar; sonra Ctrl+V. */
+/* "Hepsini kopyala"
+   - iPad / iPhone: Safari panoya birden çok resmi aynı anda koyabiliyor; kurulum gerekmez.
+   - Windows: Chrome panoya aynı anda tek resim koyabiliyor. Bu yüzden bilgisayardaki
+     HazirFoto yardımcısı (hazirfoto: bağlantısı) fotoğrafları Gezgin'de Ctrl+C yapılmış
+     gibi DOSYA olarak panoya koyar; sonra Ctrl+V. */
 const WINDOWS = /Windows/i.test(navigator.userAgent);
+const APPLE = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
 function base64url(metin) {
   let ikili = "";
@@ -221,6 +224,15 @@ function base64url(metin) {
 }
 
 function hepsiniKopyala(liste, dugme) {
+  if (APPLE) {
+    geriBildirim(dugme, "Kopyalanıyor…", 60000);
+    try {
+      navigator.clipboard.write(liste.map(u => new ClipboardItem({ "image/png": pngBlob(u) })))
+        .then(() => geriBildirim(dugme, liste.length + " fotoğraf panoda ✓", 2500))
+        .catch(() => geriBildirim(dugme, "Olmadı", 2500));
+    } catch (e) { geriBildirim(dugme, "Olmadı", 2500); }
+    return;
+  }
   const tam = liste.map(u => new URL(u, location.href).href);
   let taban = tam[0].slice(0, tam[0].lastIndexOf("/") + 1);
   while (taban && !tam.every(u => u.startsWith(taban))) taban = taban.slice(0, taban.slice(0, -1).lastIndexOf("/") + 1);
@@ -232,10 +244,10 @@ function fotoKart(kart, ust, tut, b, y) {
   const butonlar = document.createElement("div");
   butonlar.className = "butonlar";
 
-  if (WINDOWS) {
+  if (WINDOWS || APPLE) {
     const hepsi = document.createElement("button");
     hepsi.className = "kopyala"; hepsi.textContent = "Hepsini kopyala (" + y.fotolar.length + ")";
-    hepsi.title = "Bilgisayarda bir kez HazirFoto kurulumu gerekir. Sonra Kommo / Instagram'da Ctrl+V.";
+    if (WINDOWS) hepsi.title = "Bilgisayarda bir kez HazirFoto kurulumu gerekir. Sonra Kommo / Instagram'da Ctrl+V.";
     hepsi.addEventListener("click", () => hepsiniKopyala(y.fotolar, hepsi));
     butonlar.appendChild(hepsi);
   }
