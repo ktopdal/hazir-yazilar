@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hazır Yazılar</title>
+<style>
+  :root { --bg:#f4f6f8; --card:#fff; --ink:#1b2630; --muted:#6b7a88; --accent:#0b6e99; --ok:#1a8a4a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+  header { position:sticky; top:0; background:var(--bg); padding:14px 16px 10px; border-bottom:1px solid #dde3e8; z-index:5; }
+  h1 { margin:0 0 8px; font-size:18px; }
+  #ara { width:100%; padding:10px 12px; font-size:15px; border:1px solid #c9d2d9; border-radius:8px; }
+  main { max-width:820px; margin:0 auto; padding:14px 16px 60px; }
+  .kart { background:var(--card); border:1px solid #dde3e8; border-radius:10px; padding:12px 14px; margin-bottom:12px; }
+  .ust { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .baslik { font-weight:700; font-size:16px; flex:1; }
+  .tut { width:16px; height:27px; flex:none; cursor:grab; touch-action:none; background-image:radial-gradient(circle, #8a97a3 1.7px, transparent 2px); background-size:8px 9px; user-select:none; }
+  .tut:active { cursor:grabbing; }
+  .kart.surukle { opacity:.9; box-shadow:0 8px 22px rgba(0,0,0,.22); position:relative; z-index:3; }
+  #sifirla { float:right; background:none; border:0; color:var(--muted); font-size:12px; cursor:pointer; text-decoration:underline; }
+  button.kopyala { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 18px; font-size:15px; font-weight:600; cursor:pointer; min-width:120px; }
+  button.kopyala:hover { filter:brightness(1.1); }
+  button.kopyala.tamam { background:var(--ok); }
+  pre { margin:10px 0 0; white-space:pre-wrap; word-wrap:break-word; font-family:inherit; font-size:14px; line-height:1.45; color:var(--muted); max-height:7.5em; overflow:hidden; cursor:pointer; }
+  pre.acik { max-height:none; }
+  .bos { text-align:center; color:var(--muted); padding:30px; display:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hazır Yazılar <button id="sifirla" title="Sıralamayı ilk haline döndür">Sırayı sıfırla</button></h1>
+  <input id="ara" type="search" placeholder="Başlık veya metin ara...">
+</header>
+<main id="liste"></main>
+<div class="bos" id="bos">Sonuç yok</div>
+
+<script>
+/* YENİ YAZI EKLEMEK İÇİN: aşağıdaki listeye { baslik: "...", metin: `...` }, bloğu ekle. */
+const YAZILAR = [
+  {
+    baslik: "8mtÖnBilgi",
+    metin: `Merhaba,
+Alya 8 - 7.90 mt modelimiz için fiyatımız motorsuz 42bin euro dur.
+* Balık bulucu, android müzik sistemi, seçilebilir döşeme, mobilya, hatta tekne rengi, solar güneş panelleri ve sistemi (mppt, inverter vs) fiyatımız içine dahil olan bazı ürünlerdendir.
+* Tüm motor markarları ile anlaşmamız olduğundan dilediğiniz motor gücü ve markasını seçebilirsiniz. Tercihinize göre Suzuki, Mercury, Yamaha, Honda, Tohatsu, Parsun veya farklı markalar ile 140-300 HP arası seçim yapılabilir.
+
+Dilerseniz whatsapp üzerinden detay bilgileri iletebilirim. (Katalog, fotoğraf, video, teklif, donanım listesi, teknik bilgi vs..) Ayrıca sorularınız olursa oradan hızlıca cevaplayabiliriz. Detaylandıralım mı ?`
+  },
+  {
+    baslik: "BazıMotor",
+    metin: `Bazı motor marka ve güçlerinden fiyat örnekleri aşağıdaki gibidir.
+
+* Tohatsu 140 - XL EFI - 20-23 Knot/20-23 mph - *8.500 €*
+* Tohatsu 150 - XL EFI - Krom Perv. - 23-25 Knot/23-26 mph - *10.500 €*
+* Mercury F 150 L / XL ProXS - 25+ Knot/29 mph - *13.458 €*
+* Yamaha F 150JETX 150 HP - 23+ Knot/26,5 mph - *14.687 €*
+* Yamaha F 200PETX 200 HP - 32+ Knot/37 mph - *17.688 €*
+* Suzuki 250 HP - TX 250 - 3614 cc V6 - 40+ Knot/46 mph - *18.000 €*
+* Mercury F 300 XL - DTS Dijital Gaz Kollu / CMS - V8-4600cc + Beyaz - 43,5 Knot/50 mph - *22.083 €*
+* *Fiyatlar 15 gün süre ile geçerlidir.*`
+  },
+  {
+    baslik: "11mtÖnBilgi",
+    metin: `Merhaba,
+Alyssa 11 model, 11.50 mt teknemiz için fiyatımız motorsuz 122.500 euro dur.
+* Baş Pervanesi, Balık bulucu, android müzik sistemi, tik kaplama, webasto, üç kanatlı giriş kapısı, burun tarafında oturma bölgesi, solar güneş panelleri ve sistemi (mppt, inverter vs), lityum akü, seçilebilir döşeme, mobilya, hatta tekne rengi fiyatımıza dahil olan bazı ürünlerdendir.
+* Tüm motor markarları ile anlaşmamız olduğundan dilediğiniz motor gücü ve markasını seçebilirsiniz. Tercihinize göre Nanni, Yanmar, Fiat FPT, Volvo, Suzuki, Mercury, Yamaha, Honda, Tohatsu, veya farklı markalar ile 250-600 HP arası seçim yapılabilir.
+* Fiyatlara elektrikli *açılır borda kapakları* dahildir* istemezseniz 9.500 Euro toplam bedelden düşecektir.
+* Teknenin burun kısmında bulunan Oturum Alanı inşaası için ekstra bedel bu kampanya ile *ALINMAYACAKTIR* .`
+  }
+];
+
+const liste = document.getElementById("liste");
+const bos = document.getElementById("bos");
+
+/* Kayıtlı sıralamayı uygula (bu tarayıcıda saklanır) */
+try {
+  const kayit = JSON.parse(localStorage.getItem("sira") || "[]");
+  if (kayit.length) {
+    const yer = b => { const i = kayit.indexOf(b); return i === -1 ? 9999 : i; };
+    YAZILAR.sort((a, b) => yer(a.baslik) - yer(b.baslik));
+  }
+} catch (e) {}
+
+function siraKaydet() {
+  try {
+    localStorage.setItem("sira", JSON.stringify([...liste.children].map(k => k.dataset.baslik)));
+  } catch (e) {}
+}
+
+function baglaSurukle(tut, kart) {
+  tut.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    kart.classList.add("surukle");
+    const hareket = ev => {
+      const digerleri = [...liste.children].filter(k => k !== kart && k.style.display !== "none");
+      const hedef = digerleri.find(k => {
+        const r = k.getBoundingClientRect();
+        return ev.clientY < r.top + r.height / 2;
+      });
+      if (hedef) { if (kart.nextSibling !== hedef) liste.insertBefore(kart, hedef); }
+      else liste.appendChild(kart);
+      if (ev.clientY < 90) window.scrollBy(0, -14);
+      else if (ev.clientY > window.innerHeight - 60) window.scrollBy(0, 14);
+    };
+    const bitir = () => {
+      kart.classList.remove("surukle");
+      document.removeEventListener("pointermove", hareket);
+      document.removeEventListener("pointerup", bitir);
+      document.removeEventListener("pointercancel", bitir);
+      siraKaydet();
+    };
+    document.addEventListener("pointermove", hareket);
+    document.addEventListener("pointerup", bitir);
+    document.addEventListener("pointercancel", bitir);
+  });
+}
+
+document.getElementById("sifirla").addEventListener("click", () => {
+  try { localStorage.removeItem("sira"); } catch (e) {}
+  location.reload();
+});
+
+async function kopyala(metin, dugme) {
+  try {
+    await navigator.clipboard.writeText(metin);
+  } catch (e) {
+    const t = document.createElement("textarea");
+    t.value = metin; document.body.appendChild(t); t.select();
+    document.execCommand("copy"); t.remove();
+  }
+  const eski = dugme.textContent;
+  dugme.textContent = "Kopyalandı ✓";
+  dugme.classList.add("tamam");
+  setTimeout(() => { dugme.textContent = eski; dugme.classList.remove("tamam"); }, 1500);
+}
+
+YAZILAR.forEach(y => {
+  const kart = document.createElement("div");
+  kart.className = "kart";
+  kart.dataset.ara = (y.baslik + " " + y.metin).toLocaleLowerCase("tr");
+  kart.dataset.baslik = y.baslik;
+
+  const ust = document.createElement("div");
+  ust.className = "ust";
+  const tut = document.createElement("div");
+  tut.className = "tut"; tut.title = "Sürükleyip yerini değiştir";
+  baglaSurukle(tut, kart);
+  const b = document.createElement("div");
+  b.className = "baslik"; b.textContent = y.baslik;
+  const d = document.createElement("button");
+  d.className = "kopyala"; d.textContent = "Kopyala";
+  d.addEventListener("click", () => kopyala(y.metin, d));
+  ust.append(tut, b, d);
+
+  const pre = document.createElement("pre");
+  pre.textContent = y.metin;
+  pre.title = "Tamamını görmek için tıkla";
+  pre.addEventListener("click", () => pre.classList.toggle("acik"));
+
+  kart.append(ust, pre);
+  liste.appendChild(kart);
+});
+
+document.getElementById("ara").addEventListener("input", e => {
+  const q = e.target.value.toLocaleLowerCase("tr").trim();
+  let gorunen = 0;
+  document.querySelectorAll(".kart").forEach(k => {
+    const goster = !q || k.dataset.ara.includes(q);
+    k.style.display = goster ? "" : "none";
+    if (goster) gorunen++;
+  });
+  bos.style.display = gorunen ? "none" : "block";
+});
+</script>
+</body>
+</html>
